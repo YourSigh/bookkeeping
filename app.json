@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "bookkeeping2",
-    "slug": "bookkeeping2",
+    "name": "记账小助手",
+    "slug": "记账小助手",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -13,11 +13,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yoursigh.bookkeeping"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo.jpg",
         "backgroundColor": "#ffffff"
       }
     },
@@ -31,6 +32,13 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "build": {
+      "preview": {
+        "android": {
+          "buildType": "apk"
+        }
+      }
     }
   }
 }

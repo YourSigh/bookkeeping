@@ -1,5 +1,5 @@
 {
-  "name": "bookkeeping2",
+  "name": "记账小助手",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
