@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "记账小助手",
-    "slug": "记账小助手",
+    "slug": "bookkeeping",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -20,7 +20,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.jpg",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.yoursigh.bookkeeping"
     },
     "web": {
       "bundler": "metro",
@@ -38,6 +39,11 @@
         "android": {
           "buildType": "apk"
         }
+      }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b78da58f-84ab-4920-9130-bf0d1ad3c366"
       }
     }
   }
