@@ -39,7 +39,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: '#ccffaa', // 设置背景颜色
         },
-        header: () => <Header />,
+        headerShown: false,
       }}>
       <Tabs.Screen
         name="index"
