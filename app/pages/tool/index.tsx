@@ -1,60 +1,89 @@
 import React from 'react';
-import { View, Text, Image, Button, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { router } from 'expo-router';
+import { ToolList } from './model/menu';
 
 interface Tool {
-    id: number;
-    name: string;
-    icon: any;
-}
-  
-interface ToolItemProps {
-    tool: Tool;
+  id: number;
+  name: string;
+  logo: any;
+  path: any;
 }
 
-const toolList = [
-    {
-        id: 1,
-        name: '扫雷',
-        icon: require('@/assets/images/landmine.png'),
-    }
-]
+interface ToolItemProps {
+  tool: Tool;
+}
 
 const ToolItem: React.FC<ToolItemProps> = ({ tool }) => {
   return (
     <View style={styles.toolItem}>
-        <TouchableOpacity onPress={() => {
-                router.push('/pages/test')
-                router.setParams({title: '测试'})
-            }}>
-            <Image source={tool.icon} style={styles.itemImage} />
-        </TouchableOpacity>
-        <Text style={styles.itemText}>{tool.name}</Text>
+      <TouchableOpacity onPress={() => {
+        router.push({
+          pathname: tool.path,
+        });
+        router.setParams({ title: '测试' });
+      }}>
+        <Image source={tool.logo} style={styles.itemImage} />
+      </TouchableOpacity>
+      <Text style={styles.itemText}>{tool.name}</Text>
     </View>
+  );
+};
+
+const ToolContent: React.FC = () => {
+  const formatData = (data: any[], numColumns: number) => {
+    const totalRows = Math.floor(data.length / numColumns);
+    let totalLastRow = data.length - (totalRows * numColumns);
+
+    while (totalLastRow !== 0 && totalLastRow !== numColumns) {
+      data.push(null);
+      totalLastRow++;
+    }
+    return data;
+  };
+
+  const renderItem = ({ item }: { item: Tool | null }) => {
+    if (!item) {
+      return <View style={[styles.toolItem, { backgroundColor: 'transparent' }]} />;
+    }
+    return <ToolItem tool={item} />;
+  };
+
+  return (
+    <FlatList
+      data={formatData(ToolList, 3)}
+      renderItem={renderItem}
+      keyExtractor={(item, index) => (item ? item.id.toString() : index.toString())}
+      numColumns={3}
+    />
   );
 };
 
 const ToolScreen: React.FC = () => {
   return (
-    <View style={styles.container}>
-      <Text>工具</Text>
-      {toolList.map((tool) => (
-        <ToolItem key={tool.id} tool={tool} />
-      ))}
+    <View style={styles.toolContainer}>
+      <Text style={styles.toolTitle}>工具</Text>
+      <ToolContent />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  toolTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  toolContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#fff',
   },
   toolItem: {
-    borderRadius: 10,
-    backgroundColor: '#fff',
+    flex: 1,
+    alignItems: 'center',
+    margin: 5,
   },
   itemImage: {
     width: 100,
@@ -64,7 +93,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     textAlign: 'center',
-  }
+  },
 });
 
 export default ToolScreen;
