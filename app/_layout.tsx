@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { router, useSegments } from 'expo-router';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Colors } from '@/constants/Colors';
+import Constants from 'expo-constants';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -22,9 +23,9 @@ const Header = () => {
   const segments = useSegments();
   const colorScheme = useColorScheme();
   return (
-    <View style={{ height: 60, justifyContent: 'center', alignItems: 'center', backgroundColor: '#ccffaa' }}>
+    <View style={styles.header}>
       {!mainRoutes.includes(segments[segments.length - 1]) && (
-        <TouchableOpacity  style={{ position: 'absolute', left: 10 }} onPress={() => router.back()}>
+        <TouchableOpacity  style={{ position: 'absolute', left: 10, bottom: 18, }} onPress={() => router.back()}>
           <AntDesign name="arrowleft" size={24} color={Colors[colorScheme ?? 'light'].text} />
         </TouchableOpacity>
       )}
@@ -54,7 +55,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack
-        screenOptions={({ route }) => ({
+        screenOptions={() => ({
           header: () => <Header />,
         })}
       >
@@ -64,3 +65,15 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  header: {
+    height: 60 + Constants.statusBarHeight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ccffaa',
+    paddingTop: Constants.statusBarHeight,
+    position:'relative',
+    flexDirection: 'row',
+  }
+});
