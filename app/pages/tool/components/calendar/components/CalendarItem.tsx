@@ -14,7 +14,11 @@ const CalendarItem: React.FC<Props> = ({isSelect, consume, date, isThisMonth, on
   return (
     <TouchableOpacity onPress={onClick} style={[isSelect? (isNow? styles.nowDate : styles.selected) : null, styles.calendarItem, isThisMonth? null : styles.notThisMonth]}>
       <Text style={[{color: isNow ? '#1daa1d': 'black'}, styles.textDate]}>{date}</Text>
-      <Text style={{color: consume >= 0 ? 'red': 'green'}}>{consume >= 0 ? '+' + consume : consume}</Text>
+      <Text style={[
+        { color: consume >= 0 ? 'red' : 'green' },
+      ]}>
+        {consume >= 0 ? '+' + consume : consume}
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -29,13 +33,14 @@ const styles = StyleSheet.create({
     calendarItem: {
       padding: 10,
       width: "14.28%",
-      height: 50,
+      height: 55,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 30,
+      borderRadius: 50,
     },
     textDate: {
-      fontSize: 20,
+      fontSize: 18,
+      fontWeight: 600,
     },
     notThisMonth: {
       opacity: 0,
