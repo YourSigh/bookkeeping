@@ -1,20 +1,11 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Entypo from '@expo/vector-icons/Entypo';
+import { weekMap } from "@/app/pages/tool/utils/day";
 
 interface Props {
 	date: number;
 }
-
-const weekMap: Record<number, string> = {
-	0: "日",
-	1: "一",
-	2: "二",
-	3: "三",
-	4: "四",
-	5: "五",
-	6: "六",
-};
 
 const CalendarHeader: React.FC<Props> = ({ date }) => {
 	const currentDate = new Date(date);
