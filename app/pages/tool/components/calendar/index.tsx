@@ -5,17 +5,22 @@ import CalendarItem from "./components/CalendarItem";
 import { generateCalendar, weekMap } from '@/app/pages/tool/utils/day'
 import { useState, useEffect } from "react";
 
+// 生成日历数据，并自动填充周日到第一个元素之间的数据
+const getMounthData = (year: number, month: number) => {
+	const data = generateCalendar(year, month);
+	const firstDay = data[0].weekday;
+	for (let i = 0; i < firstDay; i++) {
+		data.unshift({ day: 0, weekday: i, year: year, month: month, isThisMonth: false, timestamp: 0 });
+	}
+	return data;
+}
+
 export default function Calendar() {
 	const currentDate = new Date();
 	const year = currentDate.getFullYear();
 	const month = currentDate.getMonth() + 1;
 
-	const calendarData = generateCalendar(year, month);
-	// 给第一个元素前面添加周日到第一个元素之间的元素
-	const firstDay = calendarData[0].weekday;
-	for (let i = 0; i < firstDay; i++) {
-		calendarData.unshift({ day: 0, weekday: i, year: year, month: month, isThisMonth: false });
-	}
+	const calendarData = getMounthData(year, month);
 	const weekElement = [];
 	for (let i = 0; i < 7; i++) {
 		weekElement.push(
@@ -32,10 +37,10 @@ export default function Calendar() {
 	  setRandomNumbers(numbers);
 	}, []);
 
-	const [selectedDate, setSelectedDate] = useState<number | null>(currentDate.getDate());
+	const [selectedDate, setSelectedDate] = useState<number | null>(new Date(new Date().setHours(0, 0, 0, 0)).getTime());
 	return (
 		<View style={styles.calendar}>
-			<CalendarHeader date={Date.now()} />
+			<CalendarHeader date={ selectedDate || Date.now()} />
 			<View style={styles.calendarContainer}>
 				{weekElement}
 			</View>
@@ -45,9 +50,9 @@ export default function Calendar() {
 						key={index}
 						consume={randomNumbers[index]} 
 						date={day.day} 
-						isSelect={day.day === selectedDate}
+						isSelect={day.timestamp === selectedDate}
 						isThisMonth={day.isThisMonth}
-						onClick={() => setSelectedDate(day.day)}
+						onClick={() => setSelectedDate(day.timestamp)}
 					/>
 				))}
 			</View>

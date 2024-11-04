@@ -13,6 +13,7 @@ export function generateCalendar(year: number, month: number) {
 			day: date.getDate(),
 			weekday: date.getDay(), // 0 表示星期日，6 表示星期六
             isThisMonth: date.getMonth() === adjustedMonth,
+			timestamp: date.getTime(),
 		});
 	}
 
