@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	View,
 	FlatList,
@@ -11,13 +11,13 @@ import {
 interface ImageSliderProps {
 	data?: Array<any> | null;
 	element?: (item: any) => JSX.Element | null;
-	handleRightslide?: () => Array<any>;
-	handleLeftslide?: () => Array<any>;
+	handleRightslide?: () => Array<any> | void;
+	handleLeftslide?: () => Array<any> | void;
 }
 
 const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:ImageSliderProps) => {
 	const flatListRef = useRef<FlatList<any> | null>(null);
-	const dataRef = useRef(data || [1, 2, 3]);
+	const [dataState, setDataState] = useState([1, 2, 3]);
 	const [containerWidth, setContainerWidth] = useState(0);
 
 	const handleScrollEnd = (
@@ -25,15 +25,20 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 	) => {
 		const currentOffsetX = event.nativeEvent.contentOffset.x;
 		const layoutWidth = event.nativeEvent.layoutMeasurement.width;
-
 		if (currentOffsetX === layoutWidth) {
 			return;
 		} else if (currentOffsetX === 0) {
 			// 右滑
-			dataRef.current = handleRightslide && handleRightslide() ||  dataRef.current.map((item) => item - 1);
+			(handleRightslide ? handleRightslide : () => {
+				const newData = dataState.map((item) => item - 1)
+				setDataState(newData);
+			})();
 		} else {
 			// 左滑
-			dataRef.current = handleLeftslide && handleLeftslide() || dataRef.current.map((item) => item + 1);
+			(handleLeftslide? handleLeftslide : () => {
+				const newData = dataState.map((item) => item + 1)
+				setDataState(newData);
+			})();
 		}
 
 		// 重置位置
@@ -54,7 +59,7 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 		>
 			<FlatList
 				ref={flatListRef}
-				data={dataRef.current}
+				data={data || dataState}
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
@@ -69,11 +74,10 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 					<View
 						style={{
 							width: containerWidth,
-							justifyContent: "center",
 							alignItems: "center",
 						}}
 					>
-						<View>{element && element(item) || item}</View>
+						<View>{element && element(item) || <Text style={{fontSize: 50}}>{item}</Text>}</View>
 					</View>
 				)}
 			/>

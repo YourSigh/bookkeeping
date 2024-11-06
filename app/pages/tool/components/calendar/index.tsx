@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import CalendarHeader from "./components/CalendarHeader";
 import CalendarItem from "./components/CalendarItem";
 import { generateCalendar, weekMap } from "@/app/pages/tool/utils/day";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ImageSlider from "@/app/pages/test";
 
 // 生成日历数据，并自动填充周日到第一个元素之间的数据
@@ -77,8 +77,8 @@ export default function Calendar() {
 		]);
 	}, [year, month]);
 
-	// 处理左右滑动事件
-	const handleSlide = (direction: "left" | "right") => {
+	// 处理滑动事件
+	const handleSlide = useCallback((direction: "left" | "right") => {
 		if (direction === "right") {
 			if (month === 1) {
 				setYear(year - 1);
@@ -94,7 +94,7 @@ export default function Calendar() {
 				setMonth(month + 1);
 			}
 		}
-	};
+	}, [year, month]);
 
 	// 使用 useState 来存储随机数
 	const [randomNumbers, setRandomNumbers] = useState<number[]>([]);
@@ -109,6 +109,8 @@ export default function Calendar() {
 	const [selectedDate, setSelectedDate] = useState<number | null>(
 		new Date(new Date().setHours(0, 0, 0, 0)).getTime()
 	);
+
+	const MemoizedCalendarItem = React.memo(CalendarItem);
 	return (
 		<View style={styles.calendar}>
 			<CalendarHeader date={selectedDate || Date.now()} />
@@ -118,7 +120,7 @@ export default function Calendar() {
 				element={(item) => (
 					<View style={styles.calendarContainer}>
 						{item && item.map((day: any, index: number) => (
-							<CalendarItem
+							<MemoizedCalendarItem
 								key={index}
 								consume={randomNumbers[index]}
 								date={day.day}

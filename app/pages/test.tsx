@@ -17,7 +17,7 @@ interface ImageSliderProps {
 
 const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:ImageSliderProps) => {
 	const flatListRef = useRef<FlatList<any> | null>(null);
-	const dataRef = useRef([1, 2, 3]);
+	const [dataState, setDataState] = useState([1, 2, 3]);
 	const [containerWidth, setContainerWidth] = useState(0);
 
 	const handleScrollEnd = (
@@ -25,15 +25,20 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 	) => {
 		const currentOffsetX = event.nativeEvent.contentOffset.x;
 		const layoutWidth = event.nativeEvent.layoutMeasurement.width;
-
 		if (currentOffsetX === layoutWidth) {
 			return;
 		} else if (currentOffsetX === 0) {
 			// 右滑
-			(handleRightslide ? handleRightslide : () => dataRef.current.map((item) => item - 1))();
+			(handleRightslide ? handleRightslide : () => {
+				const newData = dataState.map((item) => item - 1)
+				setDataState(newData);
+			})();
 		} else {
 			// 左滑
-			(handleLeftslide? handleLeftslide : () => dataRef.current.map((item) => item + 1))();
+			(handleLeftslide? handleLeftslide : () => {
+				const newData = dataState.map((item) => item + 1)
+				setDataState(newData);
+			})();
 		}
 
 		// 重置位置
@@ -54,7 +59,7 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 		>
 			<FlatList
 				ref={flatListRef}
-				data={data || dataRef.current}
+				data={data || dataState}
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
@@ -72,7 +77,7 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 							alignItems: "center",
 						}}
 					>
-						<View>{element && element(item) || item}</View>
+						<View>{element && element(item) || <Text style={{fontSize: 50}}>{item}</Text>}</View>
 					</View>
 				)}
 			/>
