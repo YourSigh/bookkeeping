@@ -41,11 +41,15 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 			})();
 		}
 
-		// 重置位置
-		setTimeout(() => {
-			flatListRef.current && flatListRef.current.scrollToIndex({ index: 1, animated: false });
-		}, 0);
+		// // 重置位置
+		// setTimeout(() => {
+		// 	flatListRef.current && flatListRef.current.scrollToIndex({ index: 1, animated: false });
+		// }, 0);
 	};
+
+	useEffect(() => {
+		// flatListRef.current && flatListRef.current.scrollToIndex({ index: 1, animated: false });
+	}, [dataState, data]);
 
 	return (
 		<View
