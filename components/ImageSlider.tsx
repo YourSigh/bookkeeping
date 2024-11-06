@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
 	View,
 	FlatList,
@@ -10,25 +10,24 @@ import {
 
 const { width } = Dimensions.get("window");
 
-const ImageSlider = ({data = null, item = null}) => {
+const ImageSlider = () => {
 	const flatListRef = useRef<FlatList<any> | null>(null);
-	console.log(data)
-	const dataRef = useRef(data || [1, 2, 3]);
+	const [data, setData] = useState([1, 2, 3]);
 
 	const handleScrollEnd = (
 		event: NativeSyntheticEvent<NativeScrollEvent>
 	) => {
 		const currentOffsetX = event.nativeEvent.contentOffset.x;
-		const layoutWidth = event.nativeEvent.layoutMeasurement.width;
-
-		if (currentOffsetX === layoutWidth) {
+		if (currentOffsetX === event.nativeEvent.layoutMeasurement.width) {
 			return;
 		} else if (currentOffsetX === 0) {
 			// 右滑
-			dataRef.current = dataRef.current.map((item) => item - 1);
+			const newData = data.map((item) => item - 1);
+			setData(newData);
 		} else {
 			// 左滑
-			dataRef.current = dataRef.current.map((item) => item + 1);
+			const newData = data.map((item) => item + 1);
+			setData(newData);
 		}
 
 		// 重置位置
@@ -41,7 +40,8 @@ const ImageSlider = ({data = null, item = null}) => {
 		<View>
 			<FlatList
 				ref={flatListRef}
-				data={dataRef.current}
+				data={data}
+				keyExtractor={(item) => item.toString()}
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
@@ -62,7 +62,7 @@ const ImageSlider = ({data = null, item = null}) => {
 							padding: 20,
 						}}
 					>
-						<Text style={{ fontSize: 32 }}>{item.day}</Text>
+						<Text style={{ fontSize: 32 }}>{item}</Text>
 					</View>
 				)}
 			/>
