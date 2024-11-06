@@ -17,12 +17,8 @@ interface ImageSliderProps {
 
 const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:ImageSliderProps) => {
 	const flatListRef = useRef<FlatList<any> | null>(null);
-	const dataRef = useRef(data || [1, 2, 3]);
+	const dataRef = useRef([1, 2, 3]);
 	const [containerWidth, setContainerWidth] = useState(0);
-
-	useEffect(() => {
-		dataRef.current = data || [1, 2, 3];
-	}, [data]);
 
 	const handleScrollEnd = (
 		event: NativeSyntheticEvent<NativeScrollEvent>
@@ -58,7 +54,7 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 		>
 			<FlatList
 				ref={flatListRef}
-				data={dataRef.current}
+				data={data || dataRef.current}
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
