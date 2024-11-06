@@ -42,9 +42,9 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 		}
 
 		// 重置位置
-		if (flatListRef.current) {
-			flatListRef.current.scrollToIndex({ index: 1, animated: false });
-		}
+		setTimeout(() => {
+			flatListRef.current && flatListRef.current.scrollToIndex({ index: 1, animated: false });
+		}, 0);
 	};
 
 	return (
