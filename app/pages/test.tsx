@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
 	View,
 	FlatList,
@@ -8,12 +8,17 @@ import {
 	Text,
 } from "react-native";
 
-const { width } = Dimensions.get("window");
+interface ImageSliderProps {
+	data?: Array<any> | null;
+	element?: (item: any) => JSX.Element | null;
+	handleRightslide?: () => Array<any>;
+	handleLeftslide?: () => Array<any>;
+}
 
-const ImageSlider = ({data = null, item = null}) => {
+const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:ImageSliderProps) => {
 	const flatListRef = useRef<FlatList<any> | null>(null);
-	console.log(data)
 	const dataRef = useRef(data || [1, 2, 3]);
+	const [containerWidth, setContainerWidth] = useState(0);
 
 	const handleScrollEnd = (
 		event: NativeSyntheticEvent<NativeScrollEvent>
@@ -25,10 +30,10 @@ const ImageSlider = ({data = null, item = null}) => {
 			return;
 		} else if (currentOffsetX === 0) {
 			// 右滑
-			dataRef.current = dataRef.current.map((item) => item - 1);
+			dataRef.current = handleRightslide && handleRightslide() ||  dataRef.current.map((item) => item - 1);
 		} else {
 			// 左滑
-			dataRef.current = dataRef.current.map((item) => item + 1);
+			dataRef.current = handleLeftslide && handleLeftslide() || dataRef.current.map((item) => item + 1);
 		}
 
 		// 重置位置
@@ -38,7 +43,15 @@ const ImageSlider = ({data = null, item = null}) => {
 	};
 
 	return (
-		<View>
+		<View
+			style={{
+				flex: 1,
+			}}
+			onLayout={(event) => {
+				const { width } = event.nativeEvent.layout;
+				setContainerWidth(width);
+			}}
+		>
 			<FlatList
 				ref={flatListRef}
 				data={dataRef.current}
@@ -48,21 +61,19 @@ const ImageSlider = ({data = null, item = null}) => {
 				onMomentumScrollEnd={handleScrollEnd}
 				initialScrollIndex={1} // 初始位置设为中间
 				getItemLayout={(_, index) => ({
-					length: width,
-					offset: width * index,
+					length: containerWidth,
+					offset: containerWidth * index,
 					index,
 				})}
 				renderItem={({ item }) => (
 					<View
 						style={{
-							width,
+							width: containerWidth,
 							justifyContent: "center",
 							alignItems: "center",
-							backgroundColor: "#f0f0f0",
-							padding: 20,
 						}}
 					>
-						<Text style={{ fontSize: 32 }}>{item.day}</Text>
+						<View>{element && element(item) || item}</View>
 					</View>
 				)}
 			/>

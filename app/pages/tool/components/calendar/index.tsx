@@ -2,60 +2,107 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import CalendarHeader from "./components/CalendarHeader";
 import CalendarItem from "./components/CalendarItem";
-import { generateCalendar, weekMap } from '@/app/pages/tool/utils/day'
+import { generateCalendar, weekMap } from "@/app/pages/tool/utils/day";
 import { useState, useEffect } from "react";
+import ImageSlider from "@/app/pages/test";
 
 // 生成日历数据，并自动填充周日到第一个元素之间的数据
 const getMounthData = (year: number, month: number) => {
 	const data = generateCalendar(year, month);
 	const firstDay = data[0].weekday;
 	for (let i = 0; i < firstDay; i++) {
-		data.unshift({ day: 0, weekday: i, year: year, month: month, isThisMonth: false, timestamp: 0 });
+		data.unshift({
+			day: 0,
+			weekday: i,
+			year: year,
+			month: month,
+			isThisMonth: false,
+			timestamp: 0,
+		});
 	}
 	return data;
-}
+};
+
+// 生成上个月数据
+const lastMounthData = (year: number, month: number) => {
+	if (month === 1) {
+		return getMounthData(year - 1, 12);
+	} else {
+		return getMounthData(year, month - 1);
+	}
+};
+
+// 生成下个月数据
+const nextMounthData = (year: number, month: number) => {
+	if (month === 12) {
+		return getMounthData(year + 1, 1);
+	} else {
+		return getMounthData(year, month + 1);
+	}
+};
+
+// 生成星期元素
+const weekElement = () => {
+	const weekElement = [];
+	for (let i = 0; i < 7; i++) {
+		weekElement.push(
+			<Text
+				key={i}
+				style={styles.calendarItem}
+			>
+				{weekMap[i]}
+			</Text>
+		);
+	}
+	return weekElement;
+};
 
 export default function Calendar() {
 	const currentDate = new Date();
 	const year = currentDate.getFullYear();
 	const month = currentDate.getMonth() + 1;
 
-	const calendarData = getMounthData(year, month);
-	const weekElement = [];
-	for (let i = 0; i < 7; i++) {
-		weekElement.push(
-			<Text key={i} style={styles.calendarItem}>
-				{weekMap[i]}
-			</Text>
-		);
-	}
+	const calendarData = [
+		lastMounthData(year, month),
+		getMounthData(year, month),
+		nextMounthData(year, month),
+	];
+
 	// 使用 useState 来存储随机数
 	const [randomNumbers, setRandomNumbers] = useState<number[]>([]);
 
 	useEffect(() => {
-	  const numbers = calendarData.map(() => Math.floor(Math.random() * 201) - 100);
-	  setRandomNumbers(numbers);
+		const numbers = new Array(50)
+			.fill(0)
+			.map(() => Math.floor(Math.random() * 201) - 100);
+		setRandomNumbers(numbers);
 	}, []);
 
-	const [selectedDate, setSelectedDate] = useState<number | null>(new Date(new Date().setHours(0, 0, 0, 0)).getTime());
+	const [selectedDate, setSelectedDate] = useState<number | null>(
+		new Date(new Date().setHours(0, 0, 0, 0)).getTime()
+	);
 	return (
 		<View style={styles.calendar}>
-			<CalendarHeader date={ selectedDate || Date.now()} />
-			<View style={styles.calendarContainer}>
-				{weekElement}
-			</View>
-			<View style={styles.calendarContainer}>
-				{calendarData.map((day, index) => (
-					<CalendarItem 
-						key={index}
-						consume={randomNumbers[index]} 
-						date={day.day} 
-						isSelect={day.timestamp === selectedDate}
-						isThisMonth={day.isThisMonth}
-						onClick={() => setSelectedDate(day.timestamp)}
-					/>
-				))}
-			</View>
+			<CalendarHeader date={selectedDate || Date.now()} />
+			<View style={styles.calendarContainer}>{weekElement()}</View>
+			<ImageSlider
+				data={calendarData}
+				element={(item) => (
+					<View style={styles.calendarContainer}>
+						{item.map((day: any, index: number) => (
+							<CalendarItem
+								key={index}
+								consume={randomNumbers[index]}
+								date={day.day}
+								timestamp={day.timestamp}
+								isSelect={day.timestamp === selectedDate}
+								isThisMonth={day.isThisMonth}
+								onClick={() => setSelectedDate(day.timestamp)}
+							/>
+						))}
+					</View>
+				)}
+			/>
 		</View>
 	);
 }
@@ -80,5 +127,5 @@ const styles = StyleSheet.create({
 		height: 20,
 		lineHeight: 20,
 		fontSize: 10,
-	}
+	},
 });

@@ -5,12 +5,13 @@ interface Props {
   isSelect: boolean,
   consume: number,
   date: number,
+  timestamp: number,
   isThisMonth: boolean,
   onClick: () => void;
 }
 
-const CalendarItem: React.FC<Props> = ({isSelect, consume, date, isThisMonth, onClick}) => {
-  const isNow = date === new Date().getDate();
+const CalendarItem: React.FC<Props> = ({isSelect, consume, date, timestamp, isThisMonth, onClick}) => {
+  const isNow = timestamp === new Date(new Date().setHours(0, 0, 0, 0)).getTime()
   return (
     <TouchableOpacity onPress={onClick} style={[isSelect? (isNow? styles.nowDate : styles.selected) : null, styles.calendarItem, isThisMonth? null : styles.notThisMonth]}>
       <Text style={[{color: isNow ? '#1daa1d': 'black'}, styles.textDate]}>{date}</Text>
