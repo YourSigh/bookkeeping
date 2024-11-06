@@ -59,14 +59,42 @@ const weekElement = () => {
 
 export default function Calendar() {
 	const currentDate = new Date();
-	const year = currentDate.getFullYear();
-	const month = currentDate.getMonth() + 1;
+	const [year, setYear] = useState(currentDate.getFullYear());
+	const [month, setMonth] = useState(currentDate.getMonth() + 1);
 
-	const calendarData = [
+	// 使用 useState 来存储日历数据
+	const [calendarData, setCalendarData] = useState([
 		lastMounthData(year, month),
 		getMounthData(year, month),
 		nextMounthData(year, month),
-	];
+	]);
+
+	useEffect(() => {
+		setCalendarData([
+			lastMounthData(year, month),
+			getMounthData(year, month),
+			nextMounthData(year, month),
+		]);
+	}, [year, month]);
+
+	// 处理左右滑动事件
+	const handleSlide = (direction: "left" | "right") => {
+		if (direction === "right") {
+			if (month === 1) {
+				setYear(year - 1);
+				setMonth(12);
+			} else {
+				setMonth(month - 1);
+			}
+		} else {
+			if (month === 12) {
+				setYear(year + 1);
+				setMonth(1);
+			} else {
+				setMonth(month + 1);
+			}
+		}
+	};
 
 	// 使用 useState 来存储随机数
 	const [randomNumbers, setRandomNumbers] = useState<number[]>([]);
@@ -89,7 +117,7 @@ export default function Calendar() {
 				data={calendarData}
 				element={(item) => (
 					<View style={styles.calendarContainer}>
-						{item.map((day: any, index: number) => (
+						{item && item.map((day: any, index: number) => (
 							<CalendarItem
 								key={index}
 								consume={randomNumbers[index]}
@@ -102,6 +130,8 @@ export default function Calendar() {
 						))}
 					</View>
 				)}
+				handleRightslide={() => handleSlide("right")}
+				handleLeftslide={() => handleSlide("left")}
 			/>
 		</View>
 	);

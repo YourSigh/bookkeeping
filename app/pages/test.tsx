@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	View,
 	FlatList,
@@ -11,14 +11,18 @@ import {
 interface ImageSliderProps {
 	data?: Array<any> | null;
 	element?: (item: any) => JSX.Element | null;
-	handleRightslide?: () => Array<any>;
-	handleLeftslide?: () => Array<any>;
+	handleRightslide?: () => Array<any> | void;
+	handleLeftslide?: () => Array<any> | void;
 }
 
 const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:ImageSliderProps) => {
 	const flatListRef = useRef<FlatList<any> | null>(null);
 	const dataRef = useRef(data || [1, 2, 3]);
 	const [containerWidth, setContainerWidth] = useState(0);
+
+	useEffect(() => {
+		dataRef.current = data || [1, 2, 3];
+	}, [data]);
 
 	const handleScrollEnd = (
 		event: NativeSyntheticEvent<NativeScrollEvent>
@@ -30,10 +34,10 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 			return;
 		} else if (currentOffsetX === 0) {
 			// 右滑
-			dataRef.current = handleRightslide && handleRightslide() ||  dataRef.current.map((item) => item - 1);
+			(handleRightslide ? handleRightslide : () => dataRef.current.map((item) => item - 1))();
 		} else {
 			// 左滑
-			dataRef.current = handleLeftslide && handleLeftslide() || dataRef.current.map((item) => item + 1);
+			(handleLeftslide? handleLeftslide : () => dataRef.current.map((item) => item + 1))();
 		}
 
 		// 重置位置
@@ -69,7 +73,6 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 					<View
 						style={{
 							width: containerWidth,
-							justifyContent: "center",
 							alignItems: "center",
 						}}
 					>
