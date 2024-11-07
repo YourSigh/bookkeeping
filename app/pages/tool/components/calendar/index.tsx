@@ -4,7 +4,8 @@ import CalendarHeader from "./components/CalendarHeader";
 import CalendarItem from "./components/CalendarItem";
 import { generateCalendar, weekMap } from "@/app/pages/tool/utils/day";
 import { useState, useEffect, useCallback } from "react";
-import ImageSlider from "@/components/ImageSlider";
+// import ImageSlider from "@/components/ImageSlider";
+import ImageSlider from "@/app/pages/test";
 
 // 生成日历数据，并自动填充周日到第一个元素之间的数据
 const getMounthData = (year: number, month: number) => {

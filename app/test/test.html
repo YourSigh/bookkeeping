@@ -1,44 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0"
-		/>
-		<title>Document</title>
-		<style>
-			.box1 {
-				height: 300px;
-				width: 200px;
-				background-color: red;
-				display: flex;
-				justify-content: center;
-                overflow: hidden;
-				.box2,
-				.box3,
-				.box4 {
-					height: 200px;
-                    width: 200px;
-                    flex-shrink: 0;
-				}
-                .box2 {
-                    background-color: blue;
-                }
-               .box3 {
-                    background-color: yellow;
-                }
-                .box4 {
-                    background-color: green;
-                }
-			}
-		</style>
-	</head>
-	<body>
-		<div class="box1">
-			<div class="box2"></div>
-			<div class="box3"></div>
-			<div class="box4"></div>
-		</div>
-	</body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rainbow Heart Mask</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    .rainbow-heart {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      /* Rainbow gradient background */
+      background: linear-gradient(
+        to bottom,
+        red, orange, yellow, green, blue, indigo, violet
+      );
+      /* Apply heart image as mask */
+      -webkit-mask-image: url('./test.png');
+      mask-image: url('./test.png');
+      -webkit-mask-size: contain;
+      mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="rainbow-heart"></div>
+</body>
 </html>

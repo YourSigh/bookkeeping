@@ -40,15 +40,11 @@ const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:I
 				setDataState(newData);
 			})();
 		}
-
-		// // 重置位置
-		// setTimeout(() => {
-		// 	flatListRef.current && flatListRef.current.scrollToIndex({ index: 1, animated: false });
-		// }, 0);
 	};
 
 	useEffect(() => {
-		// flatListRef.current && flatListRef.current.scrollToIndex({ index: 1, animated: false });
+		// 重置位置
+		flatListRef.current && flatListRef.current.scrollToIndex({ index: 1, animated: false });
 	}, [dataState, data]);
 
 	return (
