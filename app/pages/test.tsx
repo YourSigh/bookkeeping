@@ -1,88 +1,167 @@
-import React, { useEffect, useRef, useState } from "react";
-import {
-	View,
-	FlatList,
-	Dimensions,
-	NativeScrollEvent,
-	NativeSyntheticEvent,
-	Text,
-} from "react-native";
+import React, { useState, useRef } from "react";
+import { View, Text, PanResponder, Animated, Dimensions } from "react-native";
 
-interface ImageSliderProps {
-	data?: Array<any> | null;
-	element?: (item: any) => JSX.Element | null;
-	handleRightslide?: () => Array<any> | void;
-	handleLeftslide?: () => Array<any> | void;
+// 链表节点定义
+class ListNode {
+  value: any;
+  next: ListNode | null;
+  prev: ListNode | null;
+
+  constructor(value: any) {
+    this.value = value;
+    this.next = null;
+    this.prev = null;
+  }
 }
 
-const ImageSlider = ({data = null, element, handleRightslide, handleLeftslide}:ImageSliderProps) => {
-	const flatListRef = useRef<FlatList<any> | null>(null);
-	const [dataState, setDataState] = useState([1, 2, 3]);
-	const [containerWidth, setContainerWidth] = useState(0);
+const MyComponent = () => {
+  const screenWidth = Dimensions.get("window").width;
+  const threshold = screenWidth / 4; // 滑动超过四分之一屏幕宽度则切换
+  const position = useRef(new Animated.Value(0)).current;
 
-	const handleScrollEnd = (
-		event: NativeSyntheticEvent<NativeScrollEvent>
-	) => {
-		const currentOffsetX = event.nativeEvent.contentOffset.x;
-		const layoutWidth = event.nativeEvent.layoutMeasurement.width;
-		if (currentOffsetX === layoutWidth) {
-			return;
-		} else if (currentOffsetX === 0) {
-			// 右滑
-			(handleRightslide ? handleRightslide : () => {
-				const newData = dataState.map((item) => item - 1)
-				setDataState(newData);
-			})();
-		} else {
-			// 左滑
-			(handleLeftslide? handleLeftslide : () => {
-				const newData = dataState.map((item) => item + 1)
-				setDataState(newData);
-			})();
-		}
-	};
+  // 初始化链表
+  const node0 = new ListNode(0);
+  const node1 = new ListNode(1);
+  const node2 = new ListNode(2);
+  node0.next = node1;
+  node1.next = node2;
+  node2.prev = node1;
+  node1.prev = node0;
 
-	useEffect(() => {
-		// 重置位置
-		flatListRef.current && flatListRef.current.scrollToIndex({ index: 1, animated: false });
-	}, [dataState, data]);
+  const [currentNode, setCurrentNode] = useState<ListNode | null>(node1);
 
-	return (
-		<View
-			style={{
-				flex: 1,
-			}}
-			onLayout={(event) => {
-				const { width } = event.nativeEvent.layout;
-				setContainerWidth(width);
-			}}
-		>
-			<FlatList
-				ref={flatListRef}
-				data={data || dataState}
-				horizontal
-				pagingEnabled
-				showsHorizontalScrollIndicator={false}
-				onMomentumScrollEnd={handleScrollEnd}
-				initialScrollIndex={1} // 初始位置设为中间
-				getItemLayout={(_, index) => ({
-					length: containerWidth,
-					offset: containerWidth * index,
-					index,
-				})}
-				renderItem={({ item }) => (
-					<View
-						style={{
-							width: containerWidth,
-							alignItems: "center",
-						}}
-					>
-						<View>{element && element(item) || <Text style={{fontSize: 50}}>{item}</Text>}</View>
-					</View>
-				)}
-			/>
-		</View>
-	);
+  // 定义手势响应器
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_evt, gestureState) => {
+      return Math.abs(gestureState.dx) > 20;
+    },
+    onPanResponderMove: Animated.event([null, { dx: position }], {
+      useNativeDriver: false,
+    }),
+    onPanResponderRelease: (_evt, gestureState) => {
+      if (gestureState.dx > threshold) {
+        goToPreviousNode();
+      } else if (gestureState.dx < -threshold) {
+        goToNextNode();
+      } else {
+        // 如果没有滑动超过阈值，重置位置
+        Animated.spring(position, {
+          toValue: 0,
+          useNativeDriver: false,
+        }).start();
+      }
+    },
+  });
+
+  // 切换到下一个节点并更新链表，创建新节点
+  const goToNextNode = () => {
+    if (currentNode && currentNode.next) {
+      // 滑动到下一个节点
+      Animated.timing(position, {
+        toValue: -screenWidth,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        position.setValue(0);
+
+        // 创建新节点并插入链表
+        const newNodeValue = currentNode.next && currentNode.next.value + 1; // 新节点的值
+        let newNode = new ListNode(newNodeValue);
+        newNode.prev = currentNode.next;
+        newNode.next = currentNode.next?.next || null;
+
+        if (currentNode.next?.next) {
+          currentNode.next.next.prev = newNode;
+        }
+
+        currentNode.next && (currentNode.next.next = newNode);
+
+        // 更新currentNode为新节点
+        setCurrentNode(currentNode.next); // 这里确保 currentNode 非 null
+      });
+    }
+  };
+
+  // 切换到上一个节点并更新链表，创建新节点
+  const goToPreviousNode = () => {
+    if (currentNode && currentNode.prev) {
+      // 滑动到上一个节点
+      Animated.timing(position, {
+        toValue: screenWidth,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => {
+        position.setValue(0);
+
+        // 创建新节点并插入链表
+        const newNodeValue = currentNode.prev && currentNode.prev.value - 1; // 新节点的值
+        let newNode = new ListNode(newNodeValue);
+        newNode.next = currentNode.prev;
+        newNode.prev = currentNode.prev?.prev || null;
+
+        if (currentNode.prev?.prev) {
+          currentNode.prev.prev.next = newNode;
+        }
+
+        currentNode.prev && (currentNode.prev.prev = newNode);
+
+        // 更新currentNode为新节点
+        setCurrentNode(currentNode.prev); // 这里确保 currentNode 非 null
+      });
+    }
+  };
+
+  return (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <View style={{ width: "100%", overflow: "hidden" }}>
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={{
+            transform: [{ translateX: position }],
+            width: screenWidth * 3, // 内部容器宽度为3倍屏幕宽度
+            flexDirection: "row",
+            marginLeft: -screenWidth, // 初始位置使第二个元素居中
+          }}
+        >
+          {/* 显示前一个节点 */}
+          <Text
+            style={{
+              fontSize: 48,
+              width: screenWidth,
+              textAlign: "center",
+              flexShrink: 0,
+            }}
+          >
+            {currentNode && currentNode.prev ? currentNode.prev.value : null}
+          </Text>
+
+          {/* 显示当前节点 */}
+          <Text
+            style={{
+              fontSize: 48,
+              width: screenWidth,
+              textAlign: "center",
+              flexShrink: 0,
+            }}
+          >
+            {currentNode ? currentNode.value : null}
+          </Text>
+
+          {/* 显示下一个节点 */}
+          <Text
+            style={{
+              fontSize: 48,
+              width: screenWidth,
+              textAlign: "center",
+              flexShrink: 0,
+            }}
+          >
+            {currentNode && currentNode.next ? currentNode.next.value : null}
+          </Text>
+        </Animated.View>
+      </View>
+    </View>
+  );
 };
 
-export default ImageSlider;
+export default MyComponent;
