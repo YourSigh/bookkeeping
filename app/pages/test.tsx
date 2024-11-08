@@ -76,10 +76,13 @@ const ImageSlider = ({
 				useNativeDriver: false,
 			}).start(() => {
 				position.setValue(0);
+				let newNodeValue;
+				if (handleLeftslide) {
+					newNodeValue = handleLeftslide();
+				} else {
+					newNodeValue = currentNode.next && currentNode.next.value + 1; // 新节点的值
+				}
 
-				// 创建新节点并插入链表
-				const newNodeValue =
-					currentNode.next && currentNode.next.value + 1; // 新节点的值
 				let newNode = new ListNode(newNodeValue);
 				newNode.prev = currentNode.next;
 				newNode.next = currentNode.next?.next || null;
@@ -107,9 +110,12 @@ const ImageSlider = ({
 			}).start(() => {
 				position.setValue(0);
 
-				// 创建新节点并插入链表
-				const newNodeValue =
-					currentNode.prev && currentNode.prev.value - 1; // 新节点的值
+				let newNodeValue;
+				if (handleRightslide) {
+					newNodeValue = handleRightslide();
+				} else {
+					newNodeValue = currentNode.prev && currentNode.prev.value - 1; // 新节点的值
+				}
 				let newNode = new ListNode(newNodeValue);
 				newNode.next = currentNode.prev;
 				newNode.prev = currentNode.prev?.prev || null;
