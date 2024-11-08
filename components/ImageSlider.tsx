@@ -28,7 +28,7 @@ const ImageSlider = ({
 	handleLeftslide,
 }: ImageSliderProps) => {
 	const screenWidth = Dimensions.get("window").width;
-	const threshold = screenWidth / 2; // 滑动超过二分之一屏幕宽度则切换
+	const threshold = screenWidth / 4; // 滑动超过四分之一屏幕宽度则切换
 	const position = useRef(new Animated.Value(0)).current;
 	const [containerWidth, setContainerWidth] = useState(0);
 
@@ -71,7 +71,7 @@ const ImageSlider = ({
 		if (currentNode && currentNode.next) {
 			// 滑动到下一个节点
 			Animated.timing(position, {
-				toValue: -screenWidth,
+				toValue: -containerWidth,
 				duration: 300,
 				useNativeDriver: false,
 			}).start(() => {
@@ -104,7 +104,7 @@ const ImageSlider = ({
 		if (currentNode && currentNode.prev) {
 			// 滑动到上一个节点
 			Animated.timing(position, {
-				toValue: screenWidth,
+				toValue: containerWidth,
 				duration: 300,
 				useNativeDriver: false,
 			}).start(() => {
