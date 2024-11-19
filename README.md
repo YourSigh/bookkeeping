@@ -14,22 +14,32 @@
 ## 启动项目
 - 1.安装依赖
 
-  ```npm install```
+  ```shell
+  npm install
+  ```
 - 2.启动项目
 
-  ```npm run start```
+  ```shell
+  npm run start
+  ```
 ## 打包流程
 - 1.安装eas cli
 
-  ```npm install -g eas-cli```
+  ```shell
+  npm install -g eas-cli
+  ```
 
 - 2.登录
 
-  ```eas login```
+  ```shell
+  eas login
+  ```
 
 - 3.生成配置文件
 
-  ```eas build:configure```
+  ```shell
+  eas build:configure
+  ```
 
 - 4.修改 eas.json
   ```javascript
@@ -45,9 +55,13 @@
 
 - 5.打包
 
-  ```eas build --platform ios```
+  ```shell
+  eas build --platform ios
+  ```
 
-  ```eas build --platform android```
+  ```shell
+  eas build --platform android
+  ```
 ## 常见问题及解决方案
 1. 添加作者好友QQ：```S6666LJ```(QID)
 2. 提交一个issues：<https://github.com/YourSigh/bookeeping/issues>
