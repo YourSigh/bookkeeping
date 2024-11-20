@@ -64,4 +64,4 @@
   ```
 ## 常见问题及解决方案
 1. 添加作者好友QQ：```S6666LJ```(QID)
-2. 提交一个issues：<https://github.com/YourSigh/bookeeping/issues>
+2. 提交一个issues：<https://github.com/YourSigh/bookkeeping/issues>
