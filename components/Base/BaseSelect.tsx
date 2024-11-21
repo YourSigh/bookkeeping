@@ -7,7 +7,6 @@ interface DropdownProps {
 }
 
 const Dropdown = ({options = ['Apple', 'Banana', 'Cherry'], selectCallback}: DropdownProps) => {
-  console.log(options)
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState('Select an option');
 

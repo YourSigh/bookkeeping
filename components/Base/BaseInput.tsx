@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import { TextInput, StyleSheet, View, Animated } from "react-native";
+import { TextInput, StyleSheet, View, Animated, TextInputProps } from "react-native";
 
-interface BaseInputProps {
-  placeholder: string;
+interface BaseInputProps extends TextInputProps {
+  placeholder?: string;
   value: string;
   placeholderStyle?: any;
 }
@@ -37,10 +37,20 @@ const BaseInput = ({ placeholder, value, placeholderStyle, ...props }: BaseInput
     }
   };
 
+  const handleChange = (text: string) => {
+    if (props?.keyboardType === 'decimal-pad') {
+        // 过滤非数字和小数点
+        const filteredText = text.replace(/[^0-9.]/g, '');
+        props.onChangeText && props.onChangeText(filteredText);
+    } else {
+        props.onChangeText && props.onChangeText(text);
+    }
+  }
+
   return (
     <View style={[styles.container, isFocused && styles.containerFocused]}>
       {/* 动态的占位符 */}
-      <Animated.Text
+      {placeholder && <Animated.Text
         style={[
           styles.placeholder,
           {
@@ -52,7 +62,7 @@ const BaseInput = ({ placeholder, value, placeholderStyle, ...props }: BaseInput
         ]}
       >
         {placeholder}
-      </Animated.Text>
+      </Animated.Text>}
 
       {/* 输入框 */}
       <TextInput
@@ -62,7 +72,7 @@ const BaseInput = ({ placeholder, value, placeholderStyle, ...props }: BaseInput
         onBlur={handleBlur}
         value={value}
         {...props}
-        placeholder=""
+        onChangeText={handleChange}
       />
     </View>
   );
@@ -90,7 +100,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: 16,
-    padding: 0, // 去掉多余内边距
+    padding: 0,
     margin: 0,
   },
 });
