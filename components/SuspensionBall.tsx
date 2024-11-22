@@ -8,11 +8,12 @@ import {
     Dimensions,
 } from "react-native";
 import { useRef, useEffect } from "react";
-import { router } from "expo-router";
+import { router, usePathname } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
 const SuspensionBall = () => {
+    const pathname = usePathname();
     const initialX = width - 80 - 10; // 初始位置的 X 坐标
     const initialY = height - 150 - 70; // 初始位置的 Y 坐标
 
@@ -79,9 +80,11 @@ const SuspensionBall = () => {
     });
 
     const handlePress = () => {
-        router.push({
-            pathname: "/pages/addBillingRecord",
-        })
+        if (pathname !== "/pages/addBillingRecord") {
+            router.push({
+                pathname: "/pages/addBillingRecord",
+            })
+        }
     };
 
     return (
