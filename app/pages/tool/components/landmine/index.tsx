@@ -8,7 +8,6 @@ export default function Landmine() {
   const [value, setValue] = useState('');
   return (
     <View style={styles.landmine}>
-      {value && <Text>{value}</Text>}
       <BaseInput keyboardType="decimal-pad" value={value} onChangeText={setValue}></BaseInput>
       <LandmineHeader></LandmineHeader>
       <Button title="返回上一页"  onPress={() => router.back()} />

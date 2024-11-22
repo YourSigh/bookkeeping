@@ -4,7 +4,7 @@
     "slug": "bookkeeping",
     "version": "1.0.6",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.jpg",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -26,7 +26,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/logo.jpg"
     },
     "plugins": [
       "expo-router"

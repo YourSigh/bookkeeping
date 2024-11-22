@@ -4,11 +4,13 @@ import { View, Text, TouchableOpacity, FlatList, StyleSheet, Modal } from 'react
 interface DropdownProps {
   options: any[];
   selectCallback?: (option: string) => void;
+  placeholder?: string;
 }
 
-const Dropdown = ({options = ['Apple', 'Banana', 'Cherry'], selectCallback}: DropdownProps) => {
+const Dropdown = ({ options = ['Apple', 'Banana', 'Cherry'], selectCallback, ...props }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState('Select an option');
+  const [selectedValue, setSelectedValue] = useState(null);
+  const placeholder = props?.placeholder || '请选择';
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
@@ -26,7 +28,7 @@ const Dropdown = ({options = ['Apple', 'Banana', 'Cherry'], selectCallback}: Dro
         style={styles.button}
         onPress={toggleDropdown}
       >
-        <Text>{selectedValue}</Text>
+        <Text style={{color: selectedValue? 'balck' : '#999'}}>{selectedValue || placeholder}</Text>
       </TouchableOpacity>
 
       {isOpen && (
@@ -45,10 +47,13 @@ const Dropdown = ({options = ['Apple', 'Banana', 'Cherry'], selectCallback}: Dro
                 data={options}
                 renderItem={({ item }) => (
                   <TouchableOpacity
-                    style={styles.option}
+                    style={[
+                      styles.option,
+                      { backgroundColor: item === selectedValue ? '#ccffaa' : '' }
+                    ]}
                     onPress={() => selectOption(item)}
                   >
-                    <Text>{item}</Text>
+                    <Text style={{color: item === selectedValue ? '#1daa1d' : ''}}>{item}</Text>
                   </TouchableOpacity>
                 )}
                 keyExtractor={(item) => item}
@@ -65,13 +70,14 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     position: 'relative',
+    padding: 12,
   },
   button: {
     padding: 10,
-    backgroundColor: '#ddd',
+    borderWidth: 1,
     borderRadius: 5,
-    width: 200,
-    alignItems: 'center',
+    borderColor: '#ccc',
+    width: '100%',
   },
   modalOverlay: {
     flex: 1,
@@ -85,6 +91,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 5,
+    maxHeight: 500,
   },
   option: {
     padding: 10,
