@@ -1,5 +1,5 @@
 import { View, Text, Button, StyleSheet } from 'react-native';
-import BaseInput from '@/components/Base/BaseInput';
+import { BaseInput } from '@/components/Base/index';
 import { router } from 'expo-router';
 import LandmineHeader from './components/LandmineHeader';
 import { useState } from 'react';

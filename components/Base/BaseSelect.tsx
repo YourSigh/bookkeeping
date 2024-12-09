@@ -7,7 +7,7 @@ interface DropdownProps {
   placeholder?: string;
 }
 
-const Dropdown = ({ options = ['Apple', 'Banana', 'Cherry'], selectCallback, ...props }: DropdownProps) => {
+const BaseSelect = ({ options = ['Apple', 'Banana', 'Cherry'], selectCallback, ...props }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState(null);
   const placeholder = props?.placeholder || '请选择';
@@ -100,4 +100,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Dropdown;
+export default BaseSelect;

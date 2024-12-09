@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import BaseSelect from '@/components/Base/BaseSelect';
+import { BaseSelect } from '@/components/Base/index';
 
 export default function LandmineHeader() {
     return (
