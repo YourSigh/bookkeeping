@@ -93,6 +93,7 @@ const SuspensionBall = () => {
             style={[
                 {
                     transform: [{ translateX: pan.x }, { translateY: pan.y }],
+                    zIndex: pathname !== '/pages/addBillingRecord' ? 1 : -1
                 },
                 styles.container,
             ]}
