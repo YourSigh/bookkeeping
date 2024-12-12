@@ -10,12 +10,12 @@ import { useState } from "react";
 import { BaseTab } from "@/components/Base";
 
 const AddBillingRecord = () => {
-  const [tabValue, setTabValue] = useState('1');
+  const [tabValue, setTabValue] = useState(1);
   const panes = [
-    {id: '1', title: '支出'},
-    {id: '2', title: '收入'},
+    {id: 1, title: '支出'},
+    {id: 2, title: '收入'},
   ]
-  const onChange = (value: string) => {
+  const onChange = (value: number) => {
     setTabValue(value);
   }
   return (

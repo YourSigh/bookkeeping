@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 interface BaseTabProps {
-  value: string;
-  panes: Array<{id: string, title: string}>;
+  value: string|number;
+  panes: Array<{id: string|number, title: string}>;
   content: React.ReactNode;
-  onChange: (value: string) => void;
+  onChange: (value: any) => void;
 }
 
 const BaseTab = (props: BaseTabProps) => {
@@ -39,19 +39,17 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#f8f8f8",
-    padding: 10,
+    backgroundColor: "#ccffaa",
   },
   tabItem: {
     padding: 10,
   },
   tabText: {
     fontSize: 16,
-    color: "#333",
   },
   activeTab: {
     fontSize: 16,
-    color: "#007bff",
+    color: "#1daa1d",
     fontWeight: "bold",
   },
   contentContainer: {
