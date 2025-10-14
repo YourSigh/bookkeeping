@@ -8,7 +8,8 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { BillingRecord } from '@/app/pages/addBillingRecord/model/billing';
 import { StorageService } from '@/utils/storage';
 import { Colors } from '@/constants/Colors';
@@ -46,6 +47,15 @@ const BillingDetail = () => {
       loadBillingRecords();
     }
   }, [date]);
+
+  // 监听页面焦点变化，自动刷新数据
+  useFocusEffect(
+    useCallback(() => {
+      if (date) {
+        loadBillingRecords();
+      }
+    }, [date])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -85,31 +95,84 @@ const BillingDetail = () => {
     };
   };
 
+  const [isManageMode, setIsManageMode] = useState(false);
+
+  const handleEditRecord = (recordId: string) => {
+    console.log('点击编辑账单:', recordId);
+    router.push({
+      pathname: '/pages/editBillingRecord',
+      params: { recordId }
+    });
+  };
+
+  const handleDeleteRecord = (recordId: string, categoryLabel: string) => {
+    Alert.alert(
+      '确认删除',
+      `确定要删除"${categoryLabel}"这笔账单吗？`,
+      [
+        { text: '取消', style: 'cancel' },
+        {
+          text: '删除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await StorageService.deleteBillingRecord(recordId);
+              await loadBillingRecords();
+              Alert.alert('成功', '账单已删除');
+            } catch (error) {
+              console.error('删除账单失败:', error);
+              Alert.alert('错误', '删除账单失败');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderBillingItem = ({ item }: { item: BillingRecord }) => (
     <View style={[styles.billingItem, { backgroundColor: colors.buttonBackground }]}>
-      <View style={styles.billingItemLeft}>
-        <Text style={[styles.categoryText, { color: colors.text }]}>
-          {item.categoryLabel}
-        </Text>
-        <Text style={[styles.descriptionText, { color: colors.text }]}>
-          {item.description || '无备注'}
-        </Text>
-        <Text style={[styles.timeText, { color: colors.text }]}>
-          {formatTime(item.createdAt)}
-        </Text>
-      </View>
-      <View style={styles.billingItemRight}>
-        <Text
-          style={[
-            styles.amountText,
-            {
-              color: item.type === 'income' ? colors.systemGreen : '#FF3B30',
-            },
-          ]}
-        >
-          {item.type === 'income' ? '+' : '-'}¥{formatAmount(item.amount)}
-        </Text>
-      </View>
+      <TouchableOpacity 
+        style={styles.billingItemContent}
+        onPress={() => handleEditRecord(item.id)}
+        activeOpacity={0.8}
+      >
+        <View style={styles.billingItemLeft}>
+          <Text style={[styles.categoryText, { color: colors.text }]}>
+            {item.categoryLabel}
+          </Text>
+          <Text style={[styles.descriptionText, { color: colors.text }]}>
+            {item.description || '无备注'}
+          </Text>
+          <Text style={[styles.timeText, { color: colors.text }]}>
+            {formatTime(item.createdAt)}
+          </Text>
+        </View>
+        <View style={styles.billingItemRight}>
+          <Text
+            style={[
+              styles.amountText,
+              {
+                color: item.type === 'income' ? colors.systemGreen : '#FF3B30',
+              },
+            ]}
+          >
+            {item.type === 'income' ? '+' : '-'}¥{formatAmount(item.amount)}
+          </Text>
+        </View>
+      </TouchableOpacity>
+      
+      {/* 管理模式下的删除按钮 */}
+      {isManageMode && (
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.deleteButton, { backgroundColor: '#FF3B30' }]}
+            onPress={() => handleDeleteRecord(item.id, item.categoryLabel)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.deleteButtonText}>删除</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 
@@ -120,7 +183,10 @@ const BillingDetail = () => {
       </Text>
       <TouchableOpacity
         style={[styles.addButton, { backgroundColor: colors.systemGreen }]}
-        onPress={() => router.push('/pages/addBillingRecord')}
+        onPress={() => router.push({
+          pathname: '/pages/addBillingRecord',
+          params: { selectedDate: date }
+        })}
       >
         <Text style={styles.addButtonText}>记一笔</Text>
       </TouchableOpacity>
@@ -145,6 +211,22 @@ const BillingDetail = () => {
         <Text style={[styles.headerTitle, { color: colors.text }]}>
           {date} 账单详情
         </Text>
+        {billingRecords.length > 0 && (
+          <TouchableOpacity
+            style={[
+              styles.manageButton, 
+              { 
+                backgroundColor: isManageMode ? '#FF3B30' : colors.systemGreen 
+              }
+            ]}
+            onPress={() => setIsManageMode(!isManageMode)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.manageButtonText}>
+              {isManageMode ? '完成' : '管理'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 统计信息 */}
@@ -204,8 +286,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
     paddingTop: 50, // 状态栏高度
@@ -242,23 +325,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   listContainer: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   billingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    marginBottom: 10,
+    marginVertical: 8,
     borderRadius: 12,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  billingItemContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   billingItemLeft: {
     flex: 1,
@@ -283,6 +369,34 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 12,
+  },
+  deleteButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    minHeight: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  manageButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  manageButtonText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,

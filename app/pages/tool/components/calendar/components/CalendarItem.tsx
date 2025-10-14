@@ -77,10 +77,10 @@ const CalendarItem: React.FC<Props> = ({
     <TouchableOpacity 
       onPress={onClick} 
       style={[
-        isSelect ? (isNow ? styles.nowDate : styles.selected) : null, 
         styles.calendarItem, 
         isThisMonth ? null : styles.notThisMonth,
-        hasData && isThisMonth ? styles.hasData : null
+        hasData && isThisMonth ? styles.hasData : null,
+        isSelect ? (isNow ? styles.nowDate : styles.selected) : null
       ]}
     >
       <Text style={[

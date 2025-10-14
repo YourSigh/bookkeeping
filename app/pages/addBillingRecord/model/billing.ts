@@ -7,6 +7,7 @@ export interface BillingRecord {
   description?: string;
   date: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface Category {

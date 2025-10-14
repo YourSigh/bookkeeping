@@ -11,11 +11,12 @@ import {
   Keyboard,
   TextInput,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { BaseTab } from '@/components/Base';
 import CustomKeyboard from '@/components/CustomKeyboard';
-import { disburse, income } from './model/kind';
-import { BillingRecord, BILLING_TYPES } from './model/billing';
+import { disburse, income } from '@/app/pages/addBillingRecord/model/kind';
+import { BillingRecord, BILLING_TYPES } from '@/app/pages/addBillingRecord/model/billing';
 import { StorageService } from '@/utils/storage';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -23,10 +24,10 @@ import Calendar from '@/app/pages/tool/components/calendar';
 
 const { width, height } = Dimensions.get('window');
 
-const AddBillingRecord = () => {
+const EditBillingRecord = () => {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
-  const { selectedDate } = useLocalSearchParams<{ selectedDate?: string }>();
+  const { recordId } = useLocalSearchParams<{ recordId: string }>();
   
   const [tabValue, setTabValue] = useState(1);
   const [amount, setAmount] = useState('0');
@@ -35,36 +36,74 @@ const AddBillingRecord = () => {
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [isDescriptionFocused, setIsDescriptionFocused] = useState(false);
-  const [recordDate, setRecordDate] = useState(selectedDate || new Date().toISOString().split('T')[0]);
-  
-  // 获取要记录的日期
-  const getRecordDate = () => {
-    return recordDate;
-  };
+  const [recordDate, setRecordDate] = useState('');
+  const [originalRecord, setOriginalRecord] = useState<BillingRecord | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const panes = [
     { id: 1, title: '支出' },
     { id: 2, title: '收入' },
   ];
 
-  const currentCategories = tabValue === 1 ? disburse : income;
   const currentType = tabValue === 1 ? BILLING_TYPES.EXPENSE : BILLING_TYPES.INCOME;
+  const currentCategories = tabValue === 1 ? disburse : income;
+
+  // 加载原始账单数据
+  const loadOriginalRecord = async () => {
+    console.log('编辑页面加载数据, recordId:', recordId);
+    if (!recordId) return;
+    
+    try {
+      setLoading(true);
+      const allRecords = await StorageService.getBillingRecords();
+      const record = allRecords.find(r => r.id === recordId);
+      
+      if (record) {
+        setOriginalRecord(record);
+        setTabValue(record.type === BILLING_TYPES.EXPENSE ? 1 : 2);
+        setAmount(record.amount.toString());
+        setSelectedCategory(record.category);
+        setDescription(record.description || '');
+        setRecordDate(record.date);
+      } else {
+        Alert.alert('错误', '找不到该账单记录');
+        router.back();
+      }
+    } catch (error) {
+      console.error('加载账单记录失败:', error);
+      Alert.alert('错误', '加载账单记录失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadOriginalRecord();
+  }, [recordId]);
+
+  // 监听页面焦点变化，重新加载数据
+  useFocusEffect(
+    useCallback(() => {
+      loadOriginalRecord();
+    }, [recordId])
+  );
 
   const onChange = (value: number) => {
     setTabValue(value);
-    setSelectedCategory('');
+    setSelectedCategory(''); // 切换类型时清空分类选择
   };
 
   const handleKeyPress = (key: string) => {
     if (key === '.') {
-      // 处理小数点
       if (!amount.includes('.')) {
         setAmount(amount + '.');
       }
-    } else if (amount === '0' && key !== '0') {
-      setAmount(key);
-    } else if (amount !== '0') {
-      setAmount(amount + key);
+    } else {
+      if (amount === '0') {
+        setAmount(key);
+      } else {
+        setAmount(amount + key);
+      }
     }
   };
 
@@ -78,6 +117,13 @@ const AddBillingRecord = () => {
 
   const handleClear = () => {
     setAmount('0');
+  };
+
+  const formatAmount = (amount: string) => {
+    if (!amount || amount === '0' || amount === '.') {
+      return '0';
+    }
+    return amount;
   };
 
   // 处理点击金额区域
@@ -118,61 +164,38 @@ const AddBillingRecord = () => {
       return;
     }
 
-    if (amount === '0') {
+    if (!amount || amount === '0' || amount === '.') {
       Alert.alert('提示', '请输入金额');
       return;
     }
 
-    const categoryLabel = currentCategories.find(cat => cat.value === selectedCategory)?.label || '';
-
-    const billingRecord: BillingRecord = {
-      id: Date.now().toString(),
-      amount: parseFloat(amount),
-      type: currentType,
-      category: selectedCategory,
-      categoryLabel,
-      description: description.trim(),
-      date: getRecordDate(),
-      createdAt: new Date().toISOString(),
-    };
+    if (!originalRecord) {
+      Alert.alert('错误', '原始记录不存在');
+      return;
+    }
 
     try {
-      await StorageService.saveBillingRecord(billingRecord);
-      Alert.alert('成功', '记账成功！', [
-        {
-          text: '确定',
-          onPress: () => {
-            // 重置表单
-            setAmount('0');
-            setSelectedCategory('');
-            setDescription('');
-            setIsKeyboardVisible(false);
-            // 返回上一页
-            router.back();
-          },
-        },
+      const categoryLabel = currentCategories.find(cat => cat.value === selectedCategory)?.label || selectedCategory;
+      
+      const updatedRecord: BillingRecord = {
+        ...originalRecord,
+        type: currentType,
+        amount: parseFloat(amount),
+        category: selectedCategory,
+        categoryLabel,
+        description: description.trim(),
+        date: recordDate,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await StorageService.updateBillingRecord(updatedRecord);
+      Alert.alert('成功', '账单修改成功', [
+        { text: '确定', onPress: () => router.back() }
       ]);
     } catch (error) {
-      Alert.alert('错误', '保存失败，请重试');
+      console.error('修改账单失败:', error);
+      Alert.alert('错误', '修改账单失败');
     }
-  };
-
-  const formatAmount = (amount: string) => {
-    // 如果金额为空或只有小数点，显示0.00
-    if (!amount || amount === '.') {
-      return '0.00';
-    }
-    
-    const num = parseFloat(amount);
-    // 如果解析失败，返回原始字符串
-    if (isNaN(num)) {
-      return amount;
-    }
-    
-    return num.toLocaleString('zh-CN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
   };
 
   const renderCategoryGrid = () => {
@@ -183,18 +206,17 @@ const AddBillingRecord = () => {
             key={category.value}
             style={[
               styles.categoryItem,
-              { backgroundColor: colors.buttonBackground },
-              selectedCategory === category.value && { backgroundColor: colors.selectedBackground },
+              {
+                backgroundColor: selectedCategory === category.value ? colors.systemGreen : colors.buttonBackground,
+              },
             ]}
             onPress={() => setSelectedCategory(category.value)}
+            activeOpacity={0.8}
           >
-            <Text
-              style={[
-                styles.categoryText,
-                { color: colors.text },
-                selectedCategory === category.value && styles.selectedCategoryText,
-              ]}
-            >
+            <Text style={[
+              styles.categoryText,
+              { color: selectedCategory === category.value ? '#ffffff' : colors.text }
+            ]}>
               {category.label}
             </Text>
           </TouchableOpacity>
@@ -202,6 +224,16 @@ const AddBillingRecord = () => {
       </View>
     );
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.keyboardBackground }]}>
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: colors.text }]}>加载中...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <TouchableWithoutFeedback onPress={handleDismissKeyboard}>
@@ -225,7 +257,7 @@ const AddBillingRecord = () => {
                 activeOpacity={0.8}
               >
                 <Text style={[styles.dateText, { color: colors.text }]}>
-                  记账日期：{getRecordDate()}
+                  记账日期：{recordDate}
                 </Text>
                 <Text style={[styles.dateHint, { color: colors.text }]}>
                   点击选择日期
@@ -248,62 +280,62 @@ const AddBillingRecord = () => {
                 <Text style={[styles.amountText, { color: colors.text }]}>{formatAmount(amount)}</Text>
               </TouchableOpacity>
 
-            {/* 分类选择区域 */}
-            <View style={styles.categoryContainer}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>选择分类</Text>
-              {renderCategoryGrid()}
+              {/* 分类选择区域 */}
+              <View style={styles.categoryContainer}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>选择分类</Text>
+                {renderCategoryGrid()}
+              </View>
+
+              {/* 备注区域 */}
+              <View style={styles.descriptionContainer}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>备注（可选）</Text>
+                <TextInput
+                  style={[
+                    styles.descriptionInput,
+                    { 
+                      backgroundColor: colors.buttonBackground,
+                      borderColor: isDescriptionFocused ? colors.systemGreen : 'transparent',
+                      color: colors.text
+                    }
+                  ]}
+                  placeholder="添加备注..."
+                  placeholderTextColor="#999999"
+                  value={description}
+                  onChangeText={setDescription}
+                  onFocus={handleDescriptionFocus}
+                  onBlur={handleDescriptionBlur}
+                  multiline
+                  maxLength={100}
+                />
+              </View>
             </View>
+          }
+        />
 
-            {/* 备注区域 */}
-            <View style={styles.descriptionContainer}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>备注（可选）</Text>
-              <TextInput
-                style={[
-                  styles.descriptionInput,
-                  { 
-                    backgroundColor: colors.buttonBackground,
-                    borderColor: isDescriptionFocused ? colors.systemGreen : 'transparent',
-                    color: colors.text
-                  }
-                ]}
-                placeholder="添加备注..."
-                placeholderTextColor="#999999"
-                value={description}
-                onChangeText={setDescription}
-                onFocus={handleDescriptionFocus}
-                onBlur={handleDescriptionBlur}
-                multiline
-                maxLength={100}
-              />
-            </View>
-          </View>
-        }
-      />
-
-      {/* 日历组件 */}
-      {isCalendarVisible && (
-        <View style={styles.calendarContainer}>
-          <Calendar 
-            mode="datePicker"
-            onDateSelect={handleDateSelect} 
-            selectedDate={recordDate}
-          />
-        </View>
-      )}
-
-      {/* 自定义键盘 */}
-      {isKeyboardVisible && (
-        <TouchableWithoutFeedback onPress={() => {}}>
-          <View style={[styles.keyboardContainer, { backgroundColor: colors.keyboardBackground }]}>
-            <CustomKeyboard
-              onKeyPress={handleKeyPress}
-              onDelete={handleDelete}
-              onConfirm={handleConfirm}
-              onClear={handleClear}
+        {/* 日历组件 */}
+        {isCalendarVisible && (
+          <View style={styles.calendarContainer}>
+            <Calendar 
+              mode="datePicker"
+              onDateSelect={handleDateSelect} 
+              selectedDate={recordDate}
             />
           </View>
-        </TouchableWithoutFeedback>
-      )}
+        )}
+
+        {/* 自定义键盘 */}
+        {isKeyboardVisible && (
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <View style={[styles.keyboardContainer, { backgroundColor: colors.keyboardBackground }]}>
+              <CustomKeyboard
+                onKeyPress={handleKeyPress}
+                onDelete={handleDelete}
+                onConfirm={handleConfirm}
+                onClear={handleClear}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        )}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -312,6 +344,15 @@ const AddBillingRecord = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   content: {
     flex: 1,
@@ -341,7 +382,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 30,
     paddingVertical: 20,
+    paddingHorizontal: 30,
     borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -350,8 +394,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
   currencySymbol: {
     fontSize: 24,
@@ -366,9 +408,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 15,
   },
   categoryGrid: {
     flexDirection: 'row',
@@ -377,9 +419,9 @@ const styles = StyleSheet.create({
   },
   categoryItem: {
     width: (width - 60) / 3,
-    height: 50,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 8,
-    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
     shadowColor: '#000',
@@ -394,9 +436,6 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  selectedCategoryText: {
-    color: '#ffffff',
   },
   descriptionContainer: {
     marginBottom: 20,
@@ -418,17 +457,6 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  keyboardToggle: {
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  keyboardToggleText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   keyboardContainer: {
     // 背景色通过动态样式设置
   },
@@ -448,4 +476,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddBillingRecord;
+export default EditBillingRecord;

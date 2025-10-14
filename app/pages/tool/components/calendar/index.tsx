@@ -8,7 +8,13 @@ import ImageSlider from "@/components/ImageSlider";
 import { BillingStatsService, DayBillingStats } from "@/utils/billingStats";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
+
+interface CalendarProps {
+  mode?: 'billing' | 'datePicker'; // 新增模式参数
+  onDateSelect?: (date: string) => void; // 日期选择回调
+  selectedDate?: string; // 选中的日期
+}
 
 // 生成日历数据，并自动填充周日到第一个元素之间的数据
 const getMounthData = (year: number, month: number) => {
@@ -61,7 +67,7 @@ const weekElement = () => {
 	return weekElement;
 };
 
-export default function Calendar() {
+export default function Calendar({ mode = 'billing', onDateSelect, selectedDate }: CalendarProps) {
 	const colorScheme = useColorScheme();
 	const colors = Colors[colorScheme ?? 'light'];
 	
@@ -76,7 +82,7 @@ export default function Calendar() {
 		nextMounthData(year, month),
 	]);
 
-	// 存储账单统计数据
+	// 存储账单统计数据（仅在billing模式下使用）
 	const [billingStats, setBillingStats] = useState<Map<string, DayBillingStats>>(new Map());
 	const [loading, setLoading] = useState(false);
 
@@ -86,8 +92,20 @@ export default function Calendar() {
 			getMounthData(year, month),
 			nextMounthData(year, month),
 		]);
-		loadBillingStats();
-	}, [year, month]);
+		// 只在billing模式下加载账单数据
+		if (mode === 'billing') {
+			loadBillingStats();
+		}
+	}, [year, month, mode]);
+
+	// 监听页面焦点变化，自动刷新账单数据（仅在billing模式下）
+	useFocusEffect(
+		useCallback(() => {
+			if (mode === 'billing') {
+				loadBillingStats();
+			}
+		}, [mode])
+	);
 
 	// 加载账单统计数据
 	const loadBillingStats = async () => {
@@ -131,9 +149,9 @@ export default function Calendar() {
 		}
 	}, [year, month]);
 
-	// 获取指定日期的账单数据
+	// 获取指定日期的账单数据（仅在billing模式下使用）
 	const getDayBillingData = (day: any) => {
-		if (!day.isThisMonth || day.day === 0) {
+		if (mode !== 'billing' || !day.isThisMonth || day.day === 0) {
 			return { amount: 0, hasData: false };
 		}
 		
@@ -160,20 +178,27 @@ export default function Calendar() {
 		}
 		
 		const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.day.toString().padStart(2, '0')}`;
-		router.push({
-			pathname: '/pages/billingDetail',
-			params: { date: dateStr }
-		});
+		
+		if (mode === 'datePicker' && onDateSelect) {
+			// 日期选择模式：调用回调函数
+			onDateSelect(dateStr);
+		} else if (mode === 'billing') {
+			// 账单模式：跳转到详情页
+			router.push({
+				pathname: '/pages/billingDetail',
+				params: { date: dateStr }
+			});
+		}
 	};
 
-	const [selectedDate, setSelectedDate] = useState<number | null>(
-		new Date(new Date().setHours(0, 0, 0, 0)).getTime()
+	const [selectedTimestamp, setSelectedTimestamp] = useState<number | null>(
+		mode === 'billing' ? new Date(new Date().setHours(0, 0, 0, 0)).getTime() : null
 	);
 
 	const MemoizedCalendarItem = React.memo(CalendarItem);
 	return (
 		<View style={[styles.calendar, { backgroundColor: colors.background }]}>
-			<CalendarHeader date={selectedDate || Date.now()} />
+			<CalendarHeader date={selectedTimestamp || Date.now()} />
 			<View style={styles.calendarContainer}>{weekElement()}</View>
 			<ImageSlider
 				data={calendarData}
@@ -181,16 +206,20 @@ export default function Calendar() {
 					<View style={styles.calendarContainer}>
 						{item && item.map((day: any, index: number) => {
 							const billingData = getDayBillingData(day);
+							const isSelected = mode === 'datePicker' && selectedDate === `${year}-${month.toString().padStart(2, '0')}-${day.day.toString().padStart(2, '0')}`;
+							const isTimestampSelected = mode === 'billing' && day.timestamp === selectedTimestamp;
 							return (
 								<MemoizedCalendarItem
 									key={index}
 									consume={billingData.amount}
 									date={day.day}
 									timestamp={day.timestamp}
-									isSelect={day.timestamp === selectedDate}
+									isSelect={isSelected || isTimestampSelected}
 									isThisMonth={day.isThisMonth}
 									onClick={() => {
-										setSelectedDate(day.timestamp);
+										if (mode === 'billing') {
+											setSelectedTimestamp(day.timestamp);
+										}
 										handleDateClick(day);
 									}}
 									hasData={billingData.hasData}
