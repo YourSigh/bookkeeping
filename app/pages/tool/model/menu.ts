@@ -16,5 +16,11 @@ export const ToolList = [
         name: '日历',
         path: '/pages/tool/components/calendar',
         logo: require('@/assets/images/calendar.png'),
+    },
+    {
+        id: 4,
+        name: '语音录入测试',
+        path: '/pages/tool/components/voiceInput',
+        logo: require('@/assets/images/writing.jpg'),
     }
 ]
